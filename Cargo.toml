@@ -1,0 +1,5 @@
+[package]
+name = "access-control"
+version = "0.1.0"
+edition = "2021"
+description = "Structurally-enforced read authorization seam for grorg/multimatrix: a ReadGrant with no public constructor, obtainable only via a successful permission check"
