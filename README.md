@@ -19,6 +19,16 @@ returns protected data can require `&ReadGrant` as a parameter, making
 it a compile error — not a code-review miss — to fetch protected data
 without having gone through the permission check.
 
+The same holds for the other two verbs: `MessageGrant` (sending to a
+resource) comes only from `check_message`, and `ManageGrant` (changing a
+room's members, managers, closed state or history setting) comes only
+from `check_manage`. `PermissionCheck` has `authorize_read`,
+`authorize_message` and `authorize_manage`; the last two default to
+`Deny`, so a read-only policy fails closed. All three checks return the
+same `Denied`. Scope (one room, or `any`) is the policy's business; the
+crate is synchronous and stores nothing. Assign, create and oversee are
+decided in the embedding service's own policy, not here.
+
 ```rust
 use access_control::{check_read, AllowAll, Identity, ResourceRef};
 
