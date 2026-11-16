@@ -1,57 +1,85 @@
 # access-control
 
-A structurally-enforced read-authorization seam for grorg and multimatrix
-— the only two network-reachable stateful services in the concordium
-stack (gait and archegraph are pure worker/consumer nodes with no data
-of their own to gate, so they never need this crate).
+Typed allow/deny/ask decisions with ranked reasons, and grants that only a
+successful `check` can mint. The crate is synchronous, has no async runtime,
+no store, and depends only on `coded-error`.
 
 ## Scope
 
-This crate defines its own opaque `Identity` and `ResourceRef` types —
-not multimatrix's `MessageId`/`AuthoredMessage` or grorg's `ActionId` —
-so it has no proto/schema dependency on either repo. Callers wrap their
-own identifiers into these types at the point they need a decision.
+The crate provides three things:
 
-The property this crate exists to provide: `ReadGrant` has no public
-constructor, no `Default`, and is not `Clone`. The only way to obtain
-one is calling `check_read` and having it succeed. A function that
-returns protected data can require `&ReadGrant` as a parameter, making
-it a compile error — not a code-review miss — to fetch protected data
-without having gone through the permission check.
+- **Decisions.** `Decision<R, A = ()>` is `Deny(R)`, `Ask(A)` or `Allow`.
+  Reasons implement `Reason` and carry a rank: when two denials meet, the
+  higher rank wins regardless of order, and an equal rank keeps the first.
+  `Merge` combines `Ask` payloads. The combinators are `strictest_all`,
+  `most_specific` and `with_snapshot`, and `Decision::deny_on_ask` settles an
+  `Ask` explicitly. `with_snapshot` is fail-closed: a missing snapshot denies
+  without calling the closure.
+- **Identifiers.** `Identity` and `ResourceRef` are opaque and never empty.
+  `new` returns `Result<_, EmptyId>`.
+- **Grants.** `Grant<V, P>` is an owned proof that a `Policy<V>` allowed a
+  caller to perform the verb `V` on a resource. It has no public constructor
+  and no `Default`, and only `check` mints one. `Grant` is `Clone`, `Send`,
+  `Sync` and `'static`. `Grant::still_allowed` asks the policy again on each
+  call and caches nothing. Refusals are `Denied<R>`, which forwards the
+  reason's `coded-error` facts unchanged.
 
-The same holds for the other two verbs: `MessageGrant` (sending to a
-resource) comes only from `check_message`, and `ManageGrant` (changing a
-room's members, managers, closed state or history setting) comes only
-from `check_manage`. `PermissionCheck` has `authorize_read`,
-`authorize_message` and `authorize_manage`; the last two default to
-`Deny`, so a read-only policy fails closed. All three checks return the
-same `Denied`. Scope (one room, or `any`) is the policy's business; the
-crate is synchronous and stores nothing. Assign, create and oversee are
-decided in the embedding service's own policy, not here.
+Consumers declare their own `Verb` types and implement `Policy` over their
+own rules and facts. The crate ships no verbs and no policy of its own.
+
+Known consumers:
+
+- **grorg** uses `Decision`, `Reason`, `strictest_all`, `deny_on_ask` and
+  `with_snapshot`. It does not use `Verb` or `Policy`.
+- **multimatrix** uses `check`, `Policy`, `Grant` and `Denied` with its
+  own verbs and reasons.
+- **structmux** does not depend on this crate yet. It may adopt it later,
+  using `Decision<&'static str, P>` with a `Merge` impl for its own payload.
+
+### The `testing` feature
+
+`testing::AllowWith<P>` allows every caller, resource and verb. It is for
+tests only. Enable the `testing` feature only in `[dev-dependencies]`, never
+in `[dependencies]`, so production builds cannot mint grants with it.
+
+```toml
+[dev-dependencies]
+access-control = { path = "...", features = ["testing"] }
+```
+
+## Example
 
 ```rust
-use access_control::{check_read, AllowAll, Identity, ResourceRef};
+use access_control::{check, Decision, Identity, Policy, ResourceRef, Verb};
 
-let policy = AllowAll;
-let caller = Identity::new("agent-123");
-let resource = ResourceRef::new("room:general");
+struct Read;
+impl Verb for Read {
+    const NAME: &'static str = "read";
+}
 
-let grant = check_read(&policy, &caller, &resource)?;
-// only now can a data-returning function that requires `&ReadGrant` be called
+struct Open;
+impl Policy<Read> for Open {
+    type Reason = &'static str;
+    type Payload = ();
+    fn decide(&self, _: &Identity, _: &ResourceRef) -> Decision<&'static str> {
+        Decision::Allow
+    }
+    fn ask_reason(&self) -> &'static str { "asked" }
+    fn payload(&self, _: &Identity, _: &ResourceRef) -> Result<(), &'static str> {
+        Ok(())
+    }
+}
+
+let grant = check::<Read, _>(&Open, &Identity::new("agent-123")?, &ResourceRef::new("res:general")?)?;
+// only now can a function that requires `&Grant<Read, ()>` be called
 ```
 
 ## Status
 
-There is no authorization policy anywhere in the concordium stack today
-— grorg has authentication only, zero authorization. The only shipped
-`PermissionCheck` is `AllowAll`, which always allows. That is
-deliberate: the point of this crate isn't to implement policy now, it's
-to make the seam structurally mandatory, so that wiring in a real policy
-later is a matter of changing `check_read`'s logic (or swapping which
-`PermissionCheck` impl callers pass in), not retrofitting checks into
-every RPC handler that forgot to call one.
+Version 0.2.0. This release breaks 0.1.x: the old `Decision{Allow, Deny}`,
+`PermissionCheck`, `AllowAll`, the per-verb grant types and the `check_read`,
+`check_message` and `check_manage` functions are removed, and `Identity::new`
+and `ResourceRef::new` are fallible. See `CHANGELOG.md` for the full list.
 
-The future join point is multimatrix's (and eventually grorg's) RPC
-handlers importing this crate and threading `&ReadGrant` through their
-data-returning functions, once both sides exist. Not wired into either
-repo yet.
+The crate depends on `coded-error` at revision `ffeaf39`. Not yet published
+(`publish = false`).

@@ -1,0 +1,27 @@
+# Changelog
+
+## 0.2.0
+
+### Breaking
+
+- Removed `Decision{Allow, Deny}`, `PermissionCheck`, `AllowAll`,
+  `ReadGrant`, `MessageGrant`, `ManageGrant`, `check_read`, `check_message`,
+  `check_manage`, and the unit `Denied`.
+- `Identity::new` and `ResourceRef::new` are fallible and return
+  `Result<_, EmptyId>`.
+
+### Added
+
+- `Decision<R, A = ()>` with `Deny`, `Ask` and `Allow`, and the combinators
+  `strictest` / `most_permissive` / `deny_on_ask` on it.
+- `Reason` (ranked reasons) and `Merge` (for `Ask` payloads).
+- `strictest_all`, `most_specific` and `with_snapshot` (fail-closed).
+- `Verb` and `Policy`, and the owned `Grant<V, P>` minted only by `check`.
+- `Grant::still_allowed`, which asks the policy afresh each time.
+- `Denied<R>`, which carries the reason and forwards its coded-error facts.
+- `testing::AllowWith<P>` behind the `testing` feature (dev-dependencies only).
+
+### Dependencies
+
+- Depends on coded-error at `ffeaf39` (`ffeaf3949230a8883b56c75e7031346a4f28ed4d`),
+  with default features off.

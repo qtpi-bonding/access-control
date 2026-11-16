@@ -51,8 +51,14 @@ fn grid() -> Vec<(oracle::Decision, Mine)> {
     vec![
         (oracle::Decision::Deny("a"), Decision::Deny("a")),
         (oracle::Decision::Deny("b"), Decision::Deny("b")),
-        (oracle::Decision::Ask { plain_yes: true }, Decision::Ask(PlainYes(true))),
-        (oracle::Decision::Ask { plain_yes: false }, Decision::Ask(PlainYes(false))),
+        (
+            oracle::Decision::Ask { plain_yes: true },
+            Decision::Ask(PlainYes(true)),
+        ),
+        (
+            oracle::Decision::Ask { plain_yes: false },
+            Decision::Ask(PlainYes(false)),
+        ),
         (oracle::Decision::Allow, Decision::Allow),
     ]
 }
@@ -78,7 +84,11 @@ fn strictest_agrees_with_the_oracle_on_the_full_grid() {
 fn most_permissive_agrees_with_the_oracle_on_the_full_grid() {
     for (ox, x) in grid() {
         for (oy, y) in grid() {
-            assert_eq!(map(ox.most_permissive(oy)), x.most_permissive(y), "{ox:?} {oy:?}");
+            assert_eq!(
+                map(ox.most_permissive(oy)),
+                x.most_permissive(y),
+                "{ox:?} {oy:?}"
+            );
         }
     }
 }

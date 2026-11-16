@@ -24,5 +24,8 @@ fn allow_with_decides_allow_and_asks_with_testing_ask() {
         <AllowWith<Scope> as Policy<Read>>::decide(&p, &id("a"), &res("r")),
         Decision::Allow
     );
-    assert_eq!(<AllowWith<Scope> as Policy<Read>>::ask_reason(&p), "testing.ask");
+    assert_eq!(
+        <AllowWith<Scope> as Policy<Read>>::ask_reason(&p),
+        "testing.ask"
+    );
 }

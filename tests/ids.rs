@@ -1,3 +1,5 @@
+//! Tests for the non-empty `Identity` and `ResourceRef` types.
+
 mod common;
 
 use access_control::{EmptyId, Identity, ResourceRef};
@@ -20,7 +22,7 @@ fn ids_round_trip_and_display_verbatim() {
 
 #[test]
 fn ids_are_ordered() {
-    let mut v = vec![Identity::new("b").unwrap(), Identity::new("a").unwrap()];
+    let mut v = [Identity::new("b").unwrap(), Identity::new("a").unwrap()];
     v.sort();
     assert_eq!(v[0].as_str(), "a");
 }

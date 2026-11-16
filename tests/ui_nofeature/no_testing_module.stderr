@@ -1,0 +1,13 @@
+error[E0432]: unresolved import `access_control::testing`
+ --> tests/ui_nofeature/no_testing_module.rs:1:21
+  |
+1 | use access_control::testing::AllowWith;
+  |                     ^^^^^^^ could not find `testing` in `access_control`
+  |
+note: found an item that was configured out
+ --> src/lib.rs
+  |
+  | #[cfg(feature = "testing")]
+  |       ------------------- the item is gated behind the `testing` feature
+  | pub mod testing;
+  |         ^^^^^^^

@@ -1,9 +1,7 @@
 //! Exhaustive laws of the decision combinators over a finite domain.
 mod common;
 
-use access_control::{
-    most_specific, strictest_all, with_snapshot, Decision, Merge,
-};
+use access_control::{most_specific, strictest_all, with_snapshot, Decision, Merge};
 use common::{domain, same_up_to_rank, Mm, PlainYes, Rk, D};
 
 #[test]
@@ -48,7 +46,10 @@ fn both_are_idempotent() {
 fn both_commute_up_to_rank() {
     for a in domain() {
         for b in domain() {
-            assert!(same_up_to_rank(&a.strictest(b), &b.strictest(a)), "{a:?} {b:?}");
+            assert!(
+                same_up_to_rank(&a.strictest(b), &b.strictest(a)),
+                "{a:?} {b:?}"
+            );
             assert!(
                 same_up_to_rank(&a.most_permissive(b), &b.most_permissive(a)),
                 "{a:?} {b:?}"
@@ -89,8 +90,14 @@ fn allow_absorbs_most_permissive() {
 fn first_wins_on_equal_rank_in_both() {
     assert_eq!(D::Deny(Rk::A0).strictest(D::Deny(Rk::B0)), D::Deny(Rk::A0));
     assert_eq!(D::Deny(Rk::B0).strictest(D::Deny(Rk::A0)), D::Deny(Rk::B0));
-    assert_eq!(D::Deny(Rk::A0).most_permissive(D::Deny(Rk::B0)), D::Deny(Rk::A0));
-    assert_eq!(D::Deny(Rk::B0).most_permissive(D::Deny(Rk::A0)), D::Deny(Rk::B0));
+    assert_eq!(
+        D::Deny(Rk::A0).most_permissive(D::Deny(Rk::B0)),
+        D::Deny(Rk::A0)
+    );
+    assert_eq!(
+        D::Deny(Rk::B0).most_permissive(D::Deny(Rk::A0)),
+        D::Deny(Rk::B0)
+    );
     let s: Decision<&'static str> = Decision::Deny("a").strictest(Decision::Deny("b"));
     assert_eq!(s, Decision::Deny("a"));
     let p: Decision<&'static str> = Decision::Deny("a").most_permissive(Decision::Deny("b"));
@@ -127,6 +134,8 @@ fn ask_merges_in_both() {
 }
 
 #[test]
+// The unit `Merge` is trivially lawful; the laws are still asserted so a change to it is caught.
+#[allow(clippy::unit_cmp, clippy::unit_arg)]
 fn merge_laws_hold_for_unit_and_plain_yes() {
     let units = [()];
     for a in units {
@@ -150,7 +159,14 @@ fn merge_laws_hold_for_unit_and_plain_yes() {
 
 fn permutations3<T: Copy>(x: [T; 3]) -> [[T; 3]; 6] {
     let [a, b, c] = x;
-    [[a, b, c], [a, c, b], [b, a, c], [b, c, a], [c, a, b], [c, b, a]]
+    [
+        [a, b, c],
+        [a, c, b],
+        [b, a, c],
+        [b, c, a],
+        [c, a, b],
+        [c, b, a],
+    ]
 }
 
 #[test]
@@ -178,7 +194,11 @@ fn ranked_reasons_never_depend_on_order() {
         Decision::Deny(Mm::NotFound),
     ];
     for order in permutations3(denies) {
-        assert_eq!(strictest_all(order), Decision::Deny(Mm::NotFound), "{order:?}");
+        assert_eq!(
+            strictest_all(order),
+            Decision::Deny(Mm::NotFound),
+            "{order:?}"
+        );
         assert_eq!(
             order[0].most_permissive(order[1]).most_permissive(order[2]),
             Decision::Deny(Mm::NotFound),
@@ -186,7 +206,12 @@ fn ranked_reasons_never_depend_on_order() {
         );
         // Allow inserted at each of the four positions.
         let [a, b, c] = order;
-        for with_allow in [[M::Allow, a, b, c], [a, M::Allow, b, c], [a, b, M::Allow, c], [a, b, c, M::Allow]] {
+        for with_allow in [
+            [M::Allow, a, b, c],
+            [a, M::Allow, b, c],
+            [a, b, M::Allow, c],
+            [a, b, c, M::Allow],
+        ] {
             assert_eq!(
                 strictest_all(with_allow),
                 Decision::Deny(Mm::NotFound),

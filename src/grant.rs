@@ -115,9 +115,7 @@ pub fn check<V: Verb, Po: Policy<V> + ?Sized>(
 ) -> Result<Grant<V, Po::Payload>, Denied<Po::Reason>> {
     match policy.decide(caller, resource) {
         Decision::Allow => {
-            let payload = policy
-                .payload(caller, resource)
-                .map_err(Denied::new)?;
+            let payload = policy.payload(caller, resource).map_err(Denied::new)?;
             Ok(Grant {
                 caller: caller.clone(),
                 resource: resource.clone(),
