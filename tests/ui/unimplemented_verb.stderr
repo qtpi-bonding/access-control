@@ -1,0 +1,32 @@
+error[E0277]: the trait bound `OnlyRead: Policy<Manage>` is not satisfied
+  --> tests/ui/unimplemented_verb.rs:30:29
+   |
+30 |     let _ = check::<Manage, _>(&OnlyRead, &a, &r);
+   |                             ^ unsatisfied trait bound
+   |
+help: the trait `Policy<Manage>` is not implemented for `OnlyRead`
+      but trait `Policy<Read>` is implemented for it
+  --> tests/ui/unimplemented_verb.rs:13:1
+   |
+13 | impl Policy<Read> for OnlyRead {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for that trait implementation, expected `Read`, found `Manage`
+note: required by a bound in `check`
+  --> src/grant.rs
+   |
+   | pub fn check<V: Verb, Po: Policy<V> + ?Sized>(
+   |                           ^^^^^^^^^ required by this bound in `check`
+
+error[E0277]: the trait bound `OnlyRead: Policy<Manage>` is not satisfied
+  --> tests/ui/unimplemented_verb.rs:30:13
+   |
+30 |     let _ = check::<Manage, _>(&OnlyRead, &a, &r);
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+   |
+help: the trait `Policy<Manage>` is not implemented for `OnlyRead`
+      but trait `Policy<Read>` is implemented for it
+  --> tests/ui/unimplemented_verb.rs:13:1
+   |
+13 | impl Policy<Read> for OnlyRead {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   = help: for that trait implementation, expected `Read`, found `Manage`

@@ -1,0 +1,13 @@
+error[E0451]: fields `caller`, `resource`, `payload` and `verb` of struct `Grant` are private
+  --> tests/ui/grant_literal.rs:11:9
+   |
+10 |     let _ = Grant::<Read, ()> {
+   |             ----------------- in this type
+11 |         caller: Identity::new("a").unwrap(),
+   |         ^^^^^^ private field
+12 |         resource: ResourceRef::new("r").unwrap(),
+   |         ^^^^^^^^ private field
+13 |         payload: (),
+   |         ^^^^^^^ private field
+14 |         verb: PhantomData,
+   |         ^^^^ private field

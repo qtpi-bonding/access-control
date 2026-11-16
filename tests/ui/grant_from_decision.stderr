@@ -1,0 +1,7 @@
+error[E0277]: the trait bound `Grant<Read, ()>: From<Decision<&str>>` is not satisfied
+ --> tests/ui/grant_from_decision.rs:9:62
+  |
+9 |     let _: Grant<Read, ()> = Decision::<&'static str>::Allow.into();
+  |                                                              ^^^^ the trait `From<Decision<&str>>` is not implemented for `Grant<Read, ()>`
+  |
+  = note: required for `Decision<&str>` to implement `Into<Grant<Read, ()>>`

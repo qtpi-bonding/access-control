@@ -1,0 +1,7 @@
+error[E0432]: unresolved import `access_control::AllowAll`
+ --> tests/ui/no_allow_all.rs:1:5
+  |
+1 | use access_control::AllowAll;
+  |     ^^^^^^^^^^^^^^^^--------
+  |                     |
+  |                     no `AllowAll` in the root

@@ -1,0 +1,5 @@
+error[E0599]: no associated function or constant named `default` found for struct `Grant<V, P>` in the current scope
+ --> tests/ui/grant_default.rs:9:32
+  |
+9 |     let _ = Grant::<Read, ()>::default();
+  |                                ^^^^^^^ associated function or constant not found in `Grant<Read, ()>`
