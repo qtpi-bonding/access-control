@@ -1,5 +1,25 @@
 [package]
 name = "access-control"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-description = "Structurally-enforced read authorization seam for grorg/multimatrix: a ReadGrant with no public constructor, obtainable only via a successful permission check"
+rust-version = "1.89"
+publish = false
+repository = "https://github.com/qtpi-bonding/access-control"
+description = "Typed allow/deny/ask decisions with ranked reasons, and grants that only a successful check can mint"
+
+[features]
+testing = []
+
+[dependencies]
+coded-error = { git = "https://github.com/qtpi-bonding/coded-error.git", rev = "ffeaf3949230a8883b56c75e7031346a4f28ed4d", default-features = false }
+
+[dev-dependencies]
+trybuild = "1"
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[[test]]
+name = "testing_feature"
+required-features = ["testing"]

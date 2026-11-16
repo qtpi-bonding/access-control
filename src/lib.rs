@@ -24,8 +24,8 @@
 //! use access_control::{check_read, AllowAll, Identity, ResourceRef};
 //!
 //! let policy = AllowAll;
-//! let caller = Identity::new("agent-123");
-//! let resource = ResourceRef::new("room:general");
+//! let caller = Identity::new("agent-123").unwrap();
+//! let resource = ResourceRef::new("room:general").unwrap();
 //!
 //! let grant = check_read(&policy, &caller, &resource).expect("allowed");
 //! assert_eq!(grant.caller(), &caller);
@@ -41,49 +41,21 @@
 //!
 //! ```compile_fail
 //! use access_control::{Identity, MessageGrant, ResourceRef};
-//! let caller = Identity::new("a");
-//! let resource = ResourceRef::new("room:r");
+//! let caller = Identity::new("a").unwrap();
+//! let resource = ResourceRef::new("room:r").unwrap();
 //! let _g = MessageGrant { caller: &caller, resource: &resource };
 //! ```
 //!
 //! ```compile_fail
 //! use access_control::{Identity, ManageGrant, ResourceRef};
-//! let caller = Identity::new("a");
-//! let resource = ResourceRef::new("room:r");
+//! let caller = Identity::new("a").unwrap();
+//! let resource = ResourceRef::new("room:r").unwrap();
 //! let _g = ManageGrant { caller: &caller, resource: &resource };
 //! ```
 
-/// An opaque caller identity. Not multimatrix's message-author id or
-/// grorg's agent id — callers wrap their own identifiers into this type
-/// at the point they need an authorization decision.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct Identity(String);
+mod id;
 
-impl Identity {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-/// An opaque reference to a protected resource (a room, a message tree,
-/// a grorg Action). Not grorg's `ActionId` or multimatrix's `MessageId`
-/// — callers wrap their own identifiers into this type.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ResourceRef(String);
-
-impl ResourceRef {
-    pub fn new(id: impl Into<String>) -> Self {
-        Self(id.into())
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
+pub use id::{EmptyId, Identity, ResourceRef};
 
 /// The outcome of a permission check.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -267,8 +239,8 @@ mod tests {
     #[test]
     fn allow_all_grants_read() {
         let policy = AllowAll;
-        let caller = Identity::new("agent-1");
-        let resource = ResourceRef::new("room:general");
+        let caller = Identity::new("agent-1").unwrap();
+        let resource = ResourceRef::new("room:general").unwrap();
 
         let grant = check_read(&policy, &caller, &resource).expect("allow_all should allow");
         assert_eq!(grant.caller(), &caller);
@@ -278,8 +250,8 @@ mod tests {
     #[test]
     fn deny_all_returns_denied() {
         let policy = DenyAll;
-        let caller = Identity::new("agent-1");
-        let resource = ResourceRef::new("room:general");
+        let caller = Identity::new("agent-1").unwrap();
+        let resource = ResourceRef::new("room:general").unwrap();
 
         let result = check_read(&policy, &caller, &resource);
         assert_eq!(result.err(), Some(Denied));
@@ -302,8 +274,8 @@ mod tests {
             }
         }
 
-        let caller = Identity::new("agent-42");
-        let resource = ResourceRef::new("action:archebuild:spec:node");
+        let caller = Identity::new("agent-42").unwrap();
+        let resource = ResourceRef::new("action:archebuild:spec:node").unwrap();
         let policy = RecordingPolicy {
             expected_caller: caller.clone(),
             expected_resource: resource.clone(),
@@ -311,7 +283,7 @@ mod tests {
 
         assert!(check_read(&policy, &caller, &resource).is_ok());
 
-        let other_caller = Identity::new("agent-99");
+        let other_caller = Identity::new("agent-99").unwrap();
         assert!(check_read(&policy, &other_caller, &resource).is_err());
     }
 
@@ -343,8 +315,8 @@ mod tests {
 
     #[test]
     fn allow_all_grants_message_and_manage() {
-        let caller = Identity::new("agent-1");
-        let room = ResourceRef::new("room:general");
+        let caller = Identity::new("agent-1").unwrap();
+        let room = ResourceRef::new("room:general").unwrap();
 
         let m = check_message(&AllowAll, &caller, &room).expect("allow_all allows message");
         assert_eq!(m.caller(), &caller);
@@ -357,24 +329,24 @@ mod tests {
 
     #[test]
     fn denied_message_check_yields_no_grant() {
-        let caller = Identity::new("agent-1");
-        let room = ResourceRef::new("room:general");
+        let caller = Identity::new("agent-1").unwrap();
+        let room = ResourceRef::new("room:general").unwrap();
         let result = check_message(&DenyAll, &caller, &room);
         assert_eq!(result.err(), Some(Denied));
     }
 
     #[test]
     fn denied_manage_check_yields_no_grant() {
-        let caller = Identity::new("agent-1");
-        let room = ResourceRef::new("room:general");
+        let caller = Identity::new("agent-1").unwrap();
+        let room = ResourceRef::new("room:general").unwrap();
         let result = check_manage(&DenyAll, &caller, &room);
         assert_eq!(result.err(), Some(Denied));
     }
 
     #[test]
     fn each_check_consults_only_its_own_verb() {
-        let caller = Identity::new("agent-1");
-        let room = ResourceRef::new("room:general");
+        let caller = Identity::new("agent-1").unwrap();
+        let room = ResourceRef::new("room:general").unwrap();
 
         let read_only = OnlyVerb("read");
         assert!(check_read(&read_only, &caller, &room).is_ok());
@@ -402,8 +374,8 @@ mod tests {
                 Decision::Allow
             }
         }
-        let caller = Identity::new("agent-1");
-        let room = ResourceRef::new("room:general");
+        let caller = Identity::new("agent-1").unwrap();
+        let room = ResourceRef::new("room:general").unwrap();
         assert!(check_read(&ReadOnlyLegacy, &caller, &room).is_ok());
         assert!(check_message(&ReadOnlyLegacy, &caller, &room).is_err());
         assert!(check_manage(&ReadOnlyLegacy, &caller, &room).is_err());
@@ -431,14 +403,14 @@ mod tests {
                 self.decide(c, r)
             }
         }
-        let caller = Identity::new("agent-42");
-        let room = ResourceRef::new("room:ops");
+        let caller = Identity::new("agent-42").unwrap();
+        let room = ResourceRef::new("room:ops").unwrap();
         let policy = Exact {
             caller: caller.clone(),
             resource: room.clone(),
         };
-        let other_caller = Identity::new("agent-99");
-        let other_room = ResourceRef::new("room:other");
+        let other_caller = Identity::new("agent-99").unwrap();
+        let other_room = ResourceRef::new("room:other").unwrap();
 
         assert!(check_message(&policy, &caller, &room).is_ok());
         assert!(check_message(&policy, &other_caller, &room).is_err());
