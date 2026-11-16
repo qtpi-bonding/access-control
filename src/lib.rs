@@ -18,9 +18,14 @@
 //! - **Fail-closed snapshots.** [`with_snapshot`] evaluates a decision over an
 //!   optional snapshot. A missing snapshot denies with the given reason and
 //!   never calls the closure.
-//! - **Grants only from `check`.** A [`Grant<V, P>`] is an owned proof that a
-//!   [`Policy`] allowed a caller to perform a [`Verb`] on a resource. It has no
-//!   public constructor and no `Default`, and only [`check`] mints one.
+//! - **Grants prove a `Policy` said yes.** A [`Grant<V, P>`] is an owned proof
+//!   that a [`Policy`] for `V` allowed a caller to perform that [`Verb`] on a
+//!   resource. It has no public constructor and no `Default`: outside
+//!   [`check`] it is unforgeable, but any [`Policy`] in scope that is
+//!   implemented for `V` can mint one through [`check`], and
+//!   [`crate::testing::AllowWith`] can mint a grant for any `V` when the
+//!   `testing` feature is enabled. Keep your [`Verb`] types `pub(crate)` so
+//!   that only your own policy can implement [`Policy`] for them.
 //! - **No caching.** [`Grant::still_allowed`] asks the policy it is given,
 //!   afresh, every time. It is pure over that policy, and the grant stores no
 //!   decision of its own.

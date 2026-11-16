@@ -19,7 +19,11 @@ The crate provides three things:
   `new` returns `Result<_, EmptyId>`.
 - **Grants.** `Grant<V, P>` is an owned proof that a `Policy<V>` allowed a
   caller to perform the verb `V` on a resource. It has no public constructor
-  and no `Default`, and only `check` mints one. `Grant` is `Clone`, `Send`,
+  and no `Default`: outside `check` it is unforgeable, but any `Policy` in
+  scope that is implemented for `V` can mint one through `check`, and
+  `testing::AllowWith` can mint a grant for any `V` when the `testing`
+  feature is enabled. Keep your `Verb` types `pub(crate)` so that only your
+  own policy can implement `Policy` for them. `Grant` is `Clone`, `Send`,
   `Sync` and `'static`. `Grant::still_allowed` asks the policy again on each
   call and caches nothing. Refusals are `Denied<R>`, which forwards the
   reason's `coded-error` facts unchanged.
@@ -41,6 +45,9 @@ Known consumers:
 `testing::AllowWith<P>` allows every caller, resource and verb. It is for
 tests only. Enable the `testing` feature only in `[dev-dependencies]`, never
 in `[dependencies]`, so production builds cannot mint grants with it.
+Gate on it: for each binary, `cargo tree -e normal,features -i access-control`
+must not show the `testing` feature. Since `AllowWith` can mint a grant for
+any verb, a production build that reaches it would make every grant forgeable.
 
 ```toml
 [dev-dependencies]

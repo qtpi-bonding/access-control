@@ -1,5 +1,11 @@
-//! `Grant<V, P>` is an owned proof that a [`Policy`] allowed a caller to
-//! perform a [`Verb`] on a resource. Only [`check`] mints one.
+//! `Grant<V, P>` is an owned proof that a [`Policy`] for `V` allowed a caller
+//! to perform that [`Verb`] on a resource. Outside [`check`] it is
+//! unforgeable, but any [`Policy`] in scope that is implemented for `V` can
+//! mint one through [`check`], and
+//! [`crate::testing::AllowWith`] can mint a grant
+//! for any `V` when the `testing` feature is enabled. Keep your [`Verb`]
+//! types `pub(crate)` so that only your own policy can implement [`Policy`]
+//! for them.
 //!
 //! [`check`] and [`Grant::still_allowed`] are the only points where an `Ask`
 //! is settled: `check` refuses it with the policy's ask reason, and
@@ -44,8 +50,11 @@ pub trait Policy<V: Verb> {
     ) -> Result<Self::Payload, Self::Reason>;
 }
 
-/// An owned proof that a caller was allowed to perform verb `V` on a
-/// resource, carrying a payload `P`. It can only be obtained from [`check`].
+/// An owned proof that a [`Policy`] for `V` allowed a caller to perform that
+/// [`Verb`] on a resource, carrying a payload `P`. Outside [`check`] it is
+/// unforgeable, but any [`Policy`] in scope that is implemented for `V` can
+/// mint one through [`check`], and [`crate::testing::AllowWith`] can mint a
+/// grant for any `V` when the `testing` feature is enabled.
 pub struct Grant<V: Verb, P> {
     caller: Identity,
     resource: ResourceRef,

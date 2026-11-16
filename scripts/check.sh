@@ -3,7 +3,6 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 SLOT="${CARGO_SLOT:-$(command -v cargo-slot || true)}"
-[ -n "$SLOT" ] || SLOT="/home/concordium/.local/bin/cargo-slot"
 [ -x "$SLOT" ] || SLOT=""
 
 $SLOT cargo fmt --all -- --check
