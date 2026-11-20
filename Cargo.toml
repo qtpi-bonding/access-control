@@ -11,7 +11,7 @@ description = "Typed allow/deny/ask decisions with ranked reasons, and grants th
 testing = []
 
 [dependencies]
-coded-error = { git = "https://github.com/qtpi-bonding/coded-error.git", rev = "ffeaf3949230a8883b56c75e7031346a4f28ed4d", default-features = false }
+coded-error = { git = "https://github.com/qtpi-bonding/coded-error.git", rev = "de21d22e31baff78eae7d4ca817b87430bff1f81", default-features = false }
 
 [dev-dependencies]
 trybuild = "1"
